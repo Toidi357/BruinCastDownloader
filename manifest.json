@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "BruinCast Downloader",
+    "version": "0.0.1",
+    "description": "test",
+    "icons": {
+      "16": "images/normal.png",
+      "48": "images/normal.png",
+      "128": "images/normal.png"
+    },
+    "permissions": ["tabs", "activeTab", "declarativeContent", "downloads"],
+    "content_scripts": [
+        {"js": ["src/sub.js"], "matches": ["<all_urls>"], "all_frames":true}
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {}
+}
