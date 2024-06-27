@@ -32,9 +32,3 @@ const interval = setInterval(() => {
     }
 }, 1000); // Check every second
 
-// receives messages from background.js service-worker
-chrome.runtime.onMessage.addListener(function (message, sender) {
-    if (message.alertError) {
-        alert(message.data)
-    }
-});

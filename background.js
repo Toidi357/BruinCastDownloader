@@ -121,12 +121,24 @@ chrome.action.onClicked.addListener(async tab => {
             });
         } catch (err) {
             console.error(err);
-            chrome.tabs.sendMessage(tab.id, { alertError: true, data: 'Error downloading video' })
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                // since only one tab should be active and in the current window at once
+                // the return variable should only have one entry
+                var activeTab = tabs[0];
+                chrome.tabs.sendMessage(activeTab.id, { alertError: true, data: 'Error downloading video' })
+            });
         }
 
     }
     else {
-        chrome.tabs.sendMessage(tab.id, { alertError: true, data: 'BruinCast Downloader: no BruinCast video loaded' })
+        // some duplicate code but who cares
+        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+            // since only one tab should be active and in the current window at once
+            // the return variable should only have one entry
+            var activeTab = tabs[0];
+            chrome.tabs.sendMessage(activeTab.id, { alertError: true, data: 'BruinCast Downloader: no BruinCast video loaded' })
+        });
+        
     }
 });
 
