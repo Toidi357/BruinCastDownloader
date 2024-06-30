@@ -4,14 +4,35 @@
     "version": "0.0.1",
     "description": "test",
     "icons": {
-      "16": "images/normal.png",
-      "48": "images/normal.png",
-      "128": "images/normal.png"
+        "16": "images/normal.png",
+        "48": "images/normal.png",
+        "128": "images/normal.png"
     },
-    "permissions": ["tabs", "activeTab", "declarativeContent", "downloads"],
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "declarativeContent",
+        "downloads",
+        "offscreen"
+    ],
     "content_scripts": [
-        {"js": ["src/main.js"], "matches": ["<all_urls>"]},
-        {"js": ["src/sub.js"], "matches": ["<all_urls>"], "all_frames":true}
+        {
+            "js": [
+                "src/main.js"
+            ],
+            "matches": [
+                "https://bruinlearn.ucla.edu/*"
+            ]
+        },
+        {
+            "js": [
+                "src/sub.js"
+            ],
+            "matches": [
+                "<all_urls>"
+            ],
+            "all_frames": true
+        }
     ],
     "background": {
         "service_worker": "background.js"
