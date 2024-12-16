@@ -68,58 +68,65 @@ chrome.runtime.onMessage.addListener(function (message, sender) {
 // handles clicked action
 chrome.action.onClicked.addListener(async tab => {
     // only initiates the download if you're on bruinlearn and a sub worker has found a valid video
-    if ((new URL(tab.url)).hostname == 'bruinlearn.ucla.edu' && VIDEOFOUND) {
-        try {
-            const BASEURL = VIDEOURL.substring(0, VIDEOURL.indexOf('playlist.m3u8'))
-            let response = await fetch(VIDEOURL)
-            let data = await response.text()
+    if ((new URL(tab.url)).hostname == 'bruinlearn.ucla.edu') {
+        // get our loading popup
+        chrome.action.setPopup({popup: 'src/popup.html'});
+        chrome.action.openPopup();
+        
+        if (VIDEOFOUND) {
+            try {
+                const BASEURL = VIDEOURL.substring(0, VIDEOURL.indexOf('playlist.m3u8'))
+                let response = await fetch(VIDEOURL)
+                let data = await response.text()
 
-            // now the data variable holds a "playlist" object, gotta parse that and extract a "chunklist" identifier
-            let chunkListID = ""
-            data.split("\n").forEach(line => {
-                if (line.startsWith('chunklist')) chunkListID = line;
-            })
+                // now the data variable holds a "playlist" object, gotta parse that and extract a "chunklist" identifier
+                let chunkListID = ""
+                data.split("\n").forEach(line => {
+                    if (line.startsWith('chunklist')) chunkListID = line;
+                })
 
-            // now need to get a "chunklist" object
-            response = await fetch(BASEURL + chunkListID)
-            data = await response.text()
+                // now need to get a "chunklist" object
+                response = await fetch(BASEURL + chunkListID)
+                data = await response.text()
 
-            //now bruincast stores its videos in chunks of 10 seconds each...gotta download them all and merge them together
-            var links = []
-            var i = 0; // this i is used to prevent race conditions given async downloading
-            data.split('\n').forEach(line => {
-                if (line.startsWith('media')) {
-                    links.push([i, BASEURL + line])
-                    i++
+                //now bruincast stores its videos in chunks of 10 seconds each...gotta download them all and merge them together
+                var links = []
+                var i = 0; // this i is used to prevent race conditions given async downloading
+                data.split('\n').forEach(line => {
+                    if (line.startsWith('media')) {
+                        links.push([i, BASEURL + line])
+                        i++
+                    }
+                })
+
+                // must send the downloading to the main.js frame because URL.createObjectURL only valid in content scripts
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    // since only one tab should be active and in the current window at once
+                    // the return variable should only have one entry
+                    var activeTab = tabs[0];
+                    chrome.tabs.sendMessage(activeTab.id, { isDownload: true, data: links })
+                });
+
+            } catch (err) {
+                console.error(err);
+                chrome.scripting.executeScript({
+                    target: { tabId: tab.id },
+                    function: () => {
+                        alert("BruinCast Downloader: Error downloading video");
+                    }
+                });
+            }
+        }
+        else {
+            // blank popup
+            chrome.action.setPopup({popup: ''});
+
+            chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                function: () => {
+                    alert("BruinCast Downloader: no BruinCast video loaded");
                 }
-            })
-
-            // must send the downloading the main.js frame because URL.createObjectURL only valid in content scripts
-            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                // since only one tab should be active and in the current window at once
-                // the return variable should only have one entry
-                var activeTab = tabs[0];
-                chrome.tabs.sendMessage(activeTab.id, { isDownload: true, data: links })
-            });
-
-        } catch (err) {
-            console.error(err);
-            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                // since only one tab should be active and in the current window at once
-                // the return variable should only have one entry
-                var activeTab = tabs[0];
-                chrome.tabs.sendMessage(activeTab.id, { alertError: true, data: 'Error downloading video' })
             });
         }
-
-    }
-    else {
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            // since only one tab should be active and in the current window at once
-            // the return variable should only have one entry
-            var activeTab = tabs[0];
-            chrome.tabs.sendMessage(activeTab.id, { alertError: true, data: 'BruinCast Downloader: no BruinCast video loaded' })
-        });
-
     }
 });
