@@ -60,20 +60,22 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 
 // when a sub.js finds a valid video link, it sends it here
 chrome.runtime.onMessage.addListener(function (message, sender) {
-    VIDEOURL = message.data;
-    VIDEOFOUND = true;
-    console.log(`got link ${VIDEOURL}`)
+    if (message.isVideoLink) {
+        VIDEOURL = message.data;
+        VIDEOFOUND = true;
+        console.log(`got link ${VIDEOURL}`)
+    }
 });
 
 // handles clicked action
 chrome.action.onClicked.addListener(async tab => {
     // only initiates the download if you're on bruinlearn and a sub worker has found a valid video
     if ((new URL(tab.url)).hostname == 'bruinlearn.ucla.edu') {
-        // get our loading popup
-        chrome.action.setPopup({popup: 'src/popup.html'});
-        chrome.action.openPopup();
-        
         if (VIDEOFOUND) {
+            // get our loading popup
+            chrome.action.setPopup({ popup: 'popup/popup.html' });
+            chrome.action.openPopup();
+            
             try {
                 const BASEURL = VIDEOURL.substring(0, VIDEOURL.indexOf('playlist.m3u8'))
                 let response = await fetch(VIDEOURL)
@@ -119,7 +121,7 @@ chrome.action.onClicked.addListener(async tab => {
         }
         else {
             // blank popup
-            chrome.action.setPopup({popup: ''});
+            chrome.action.setPopup({ popup: '' });
 
             chrome.scripting.executeScript({
                 target: { tabId: tab.id },

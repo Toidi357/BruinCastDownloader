@@ -21,7 +21,7 @@ const interval = setInterval(() => {
                 _ = videoLink
     
                 // Send message to top frame
-                chrome.runtime.sendMessage({ data: videoLink });
+                chrome.runtime.sendMessage({ isVideoLink: true, data: videoLink });
             }
         }
         catch (e) {
