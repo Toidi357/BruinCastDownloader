@@ -12,8 +12,6 @@
         "tabs",
         "activeTab",
         "declarativeContent",
-        "downloads",
-        "offscreen",
         "scripting"
     ],
     "content_scripts": [
